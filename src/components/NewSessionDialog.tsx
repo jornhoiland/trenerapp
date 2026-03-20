@@ -7,6 +7,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
 import DatePickerField from './DatePickerField';
 import { useRouter } from 'next/navigation';
 import { createSession } from '@/lib/actions/sessions';
@@ -21,10 +22,12 @@ export default function NewSessionDialog({ open, onClose }: Props) {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     if (!title.trim()) return;
     setLoading(true);
+    setError(null);
     try {
       const session = await createSession(title.trim(), date);
       setTitle('');
@@ -33,6 +36,7 @@ export default function NewSessionDialog({ open, onClose }: Props) {
       router.push(`/sessions/${session.id}`);
     } catch (err) {
       console.error('Feil ved opprettelse:', err);
+      setError(err instanceof Error ? err.message : 'Noe gikk galt. Prøv igjen.');
     } finally {
       setLoading(false);
     }
@@ -57,6 +61,11 @@ export default function NewSessionDialog({ open, onClose }: Props) {
           value={date}
           onChange={setDate}
         />
+        {error && (
+          <Typography variant="body2" color="error" sx={{ mt: 1.5 }}>
+            {error}
+          </Typography>
+        )}
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button onClick={onClose} color="inherit">
