@@ -1,14 +1,22 @@
 'use client';
 
+import { useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import BottomNavigation from '@mui/material/BottomNavigation';
 import BottomNavigationAction from '@mui/material/BottomNavigationAction';
 import Paper from '@mui/material/Paper';
 import { FitnessCenterIcon, HistoryIcon, PlayCircleIcon, LibraryIcon } from '@/components/icons';
 
+const ROUTES = ['/', '/ovelser', '/historikk', '/videoer'] as const;
+
 export default function BottomNav() {
   const router = useRouter();
   const pathname = usePathname();
+
+  // Prefetch all tab routes on mount so navigation is instant
+  useEffect(() => {
+    ROUTES.forEach((route) => router.prefetch(route));
+  }, [router]);
 
   const value = pathname.startsWith('/ovelser')
     ? 1
@@ -18,16 +26,15 @@ export default function BottomNav() {
         ? 3
         : 0;
 
+  const handleChange = useCallback((_: unknown, newValue: number) => {
+    router.push(ROUTES[newValue]);
+  }, [router]);
+
   return (
     <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1200 }} elevation={0}>
       <BottomNavigation
         value={value}
-        onChange={(_, newValue) => {
-          if (newValue === 0) router.push('/');
-          else if (newValue === 1) router.push('/ovelser');
-          else if (newValue === 2) router.push('/historikk');
-          else router.push('/videoer');
-        }}
+        onChange={handleChange}
         showLabels
       >
         <BottomNavigationAction label="Økter" icon={<FitnessCenterIcon />} />
