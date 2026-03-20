@@ -7,6 +7,7 @@ import Stack from '@mui/material/Stack';
 import { getSessions, getFavoriteSessions, getTrainingInsights } from '@/lib/actions/sessions';
 import SessionList from './SessionList';
 import InsightsSection from '@/components/InsightsSection';
+import FadeIn from '@/components/FadeIn';
 
 function SessionsSkeleton() {
   return (
@@ -29,7 +30,7 @@ async function SessionsContent() {
   ]);
 
   return (
-    <>
+    <FadeIn>
       <InsightsSection insights={insights} />
       <SessionList sessions={sessions ?? []} favorites={favorites ?? []} />
       {(!sessions || sessions.length === 0) && (
@@ -42,7 +43,7 @@ async function SessionsContent() {
           </Typography>
         </Box>
       )}
-    </>
+    </FadeIn>
   );
 }
 

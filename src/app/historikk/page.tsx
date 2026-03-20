@@ -7,6 +7,7 @@ import Stack from '@mui/material/Stack';
 import { getSessions } from '@/lib/actions/sessions';
 import { getFolders } from '@/lib/actions/folders';
 import HistoryAccordion from '@/components/HistoryAccordion';
+import FadeIn from '@/components/FadeIn';
 
 function HistorikkSkeleton() {
   return (
@@ -25,18 +26,20 @@ async function HistorikkContent() {
   ]);
 
   if (sessions && sessions.length > 0) {
-    return <HistoryAccordion sessions={sessions} folders={folders ?? []} />;
+    return <FadeIn><HistoryAccordion sessions={sessions} folders={folders ?? []} /></FadeIn>;
   }
 
   return (
-    <Box textAlign="center" mt={6}>
-      <Typography variant="h6" color="text.secondary" gutterBottom>
-        Ingen fullførte økter ennå
-      </Typography>
-      <Typography variant="body2" color="text.secondary">
-        Fullførte økter vil dukke opp her
-      </Typography>
-    </Box>
+    <FadeIn>
+      <Box textAlign="center" mt={6}>
+        <Typography variant="h6" color="text.secondary" gutterBottom>
+          Ingen fullførte økter ennå
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Fullførte økter vil dukke opp her
+        </Typography>
+      </Box>
+    </FadeIn>
   );
 }
 

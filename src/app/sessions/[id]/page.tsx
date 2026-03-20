@@ -6,6 +6,7 @@ import Stack from '@mui/material/Stack';
 import { getSession } from '@/lib/actions/sessions';
 import { getExerciseTemplates } from '@/lib/actions/templates';
 import SessionDetail from './SessionDetail';
+import FadeIn from '@/components/FadeIn';
 
 function SessionSkeleton() {
   return (
@@ -29,7 +30,7 @@ async function SessionContent({ id }: { id: string }) {
 
   if (!session) notFound();
 
-  return <SessionDetail session={session} templates={templates ?? []} />;
+  return <FadeIn><SessionDetail session={session} templates={templates ?? []} /></FadeIn>;
 }
 
 export default async function SessionPage({ params }: { params: Promise<{ id: string }> }) {

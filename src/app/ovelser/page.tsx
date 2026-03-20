@@ -5,6 +5,7 @@ import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
 import { getExerciseTemplates } from '@/lib/actions/templates';
 import ExerciseLibrary from './ExerciseLibrary';
+import FadeIn from '@/components/FadeIn';
 
 function OvelserSkeleton() {
   return (
@@ -18,7 +19,7 @@ function OvelserSkeleton() {
 
 async function OvelserContent() {
   const templates = await getExerciseTemplates();
-  return <ExerciseLibrary templates={templates ?? []} />;
+  return <FadeIn><ExerciseLibrary templates={templates ?? []} /></FadeIn>;
 }
 
 export default function OvelserPage() {
