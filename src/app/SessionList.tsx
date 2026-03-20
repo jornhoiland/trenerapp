@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Fab from '@mui/material/Fab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
@@ -44,7 +44,7 @@ interface Props {
 export default function SessionList({ sessions, favorites }: Props) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const monthGroups = groupByMonth(sessions);
+  const monthGroups = useMemo(() => groupByMonth(sessions), [sessions]);
 
   return (
     <>

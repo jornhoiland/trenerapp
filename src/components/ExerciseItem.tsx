@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, memo } from 'react';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
@@ -54,7 +54,7 @@ interface Props {
   sections?: SessionSection[];
 }
 
-export default function ExerciseItem({ exercise, readOnly = false, sections = [] }: Props) {
+export default memo(function ExerciseItem({ exercise, readOnly = false, sections = [] }: Props) {
   const [isPending, startTransition] = useTransition();
   const [editOpen, setEditOpen] = useState(false);
   const [editName, setEditName] = useState(exercise.name);
@@ -354,4 +354,4 @@ export default function ExerciseItem({ exercise, readOnly = false, sections = []
       })()}
     </>
   );
-}
+});

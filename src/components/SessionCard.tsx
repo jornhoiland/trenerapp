@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, memo, useMemo } from 'react';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardActionArea from '@mui/material/CardActionArea';
@@ -21,7 +21,7 @@ import { StarIcon, CalendarTodayIcon, DeleteIcon } from '@/components/icons';
 import { deleteSession } from '@/lib/actions/sessions';
 import type { SessionWithExercises } from '@/types/database';
 
-export default function SessionCard({ session }: { session: SessionWithExercises }) {
+export default memo(function SessionCard({ session }: { session: SessionWithExercises }) {
   const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -30,11 +30,14 @@ export default function SessionCard({ session }: { session: SessionWithExercises
   const totalCount = exercises.length;
   const progress = totalCount > 0 ? (doneCount / totalCount) * 100 : 0;
 
-  const formattedDate = new Date(session.date).toLocaleDateString('nb-NO', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  });
+  const formattedDate = useMemo(
+    () => new Date(session.date).toLocaleDateString('nb-NO', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+    }),
+    [session.date]
+  );
 
   const handleDelete = () => {
     startTransition(async () => {
@@ -121,4 +124,4 @@ export default function SessionCard({ session }: { session: SessionWithExercises
     </Dialog>
     </>
   );
-}
+});

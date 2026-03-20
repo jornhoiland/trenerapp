@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef, useTransition, useEffect, useId } from 'react';
+import { useState, useCallback, useRef, useTransition, useEffect, useId, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
@@ -98,7 +98,10 @@ export default function SessionDetail({ session, templates }: Props) {
 
   const isCompleted = session.status === 'completed';
   const exercises = session.exercises || [];
-  const sections = (session.session_sections || []).slice().sort((a, b) => a.sort_order - b.sort_order);
+  const sections = useMemo(
+    () => (session.session_sections || []).slice().sort((a, b) => a.sort_order - b.sort_order),
+    [session.session_sections]
+  );
 
   const handleToggleFavorite = () => {
     const newVal = !isFavorite;
@@ -133,10 +136,43 @@ export default function SessionDetail({ session, templates }: Props) {
     prevAllDoneRef.current = allDone;
   }, [allDone, isCompleted, handleMarkDone]);
 
-  // DnD sensors
+  // DnD sensors — stable references
   const pointerSensor = useSensor(PointerSensor, { activationConstraint: { distance: 8 } });
   const touchSensor = useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } });
   const sensors = useSensors(pointerSensor, touchSensor);
+
+  const sortedExercises = useMemo(
+    () => exercises.slice().sort((a, b) => a.sort_order - b.sort_order),
+    [exercises]
+  );
+  const unsectionedExercises = useMemo(
+    () => sortedExercises.filter((e) => !e.section_id),
+    [sortedExercises]
+  );
+  const exercisesBySectionId = useCallback(
+    (sId: string) => sortedExercises.filter((e) => e.section_id === sId),
+    [sortedExercises]
+  );
+  const allSortableIds = useMemo(
+    () => [
+      ...sections.flatMap((s) => exercisesBySectionId(s.id).map((e) => e.id)),
+      ...unsectionedExercises.map((e) => e.id),
+    ],
+    [sections, exercisesBySectionId, unsectionedExercises]
+  );
+
+  const renderExercises = useCallback(
+    (items: typeof exercises) =>
+      items.map((exercise) => (
+        <ExerciseItem
+          key={exercise.id}
+          exercise={exercise}
+          readOnly={isCompleted}
+          sections={sections}
+        />
+      )),
+    [isCompleted, sections]
+  );
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -225,8 +261,9 @@ export default function SessionDetail({ session, templates }: Props) {
     setAddToSectionId(null);
   };
 
-  const filteredTemplates = templates.filter((t) =>
-    t.name.toLowerCase().includes(templateSearch.toLowerCase())
+  const filteredTemplates = useMemo(
+    () => templates.filter((t) => t.name.toLowerCase().includes(templateSearch.toLowerCase())),
+    [templates, templateSearch]
   );
 
   const handleCompletionClose = () => {
@@ -234,12 +271,15 @@ export default function SessionDetail({ session, templates }: Props) {
     // Dialog lukkes, økten vises videre
   };
 
-  const formattedDate = new Date(session.date).toLocaleDateString('nb-NO', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
+  const formattedDate = useMemo(
+    () => new Date(session.date).toLocaleDateString('nb-NO', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }),
+    [session.date]
+  );
 
   return (
     <>
@@ -279,28 +319,10 @@ export default function SessionDetail({ session, templates }: Props) {
 
         {exercises.length > 0 || sections.length > 0 ? (
           (() => {
-            const sorted = exercises.slice().sort((a, b) => a.sort_order - b.sort_order);
-            const unsectioned = sorted.filter((e) => !e.section_id);
-            const bySectionId = (sId: string) => sorted.filter((e) => e.section_id === sId);
-            const allIds = [
-              ...sections.flatMap((s) => bySectionId(s.id).map((e) => e.id)),
-              ...unsectioned.map((e) => e.id),
-            ];
-
-            const renderExercises = (items: typeof exercises) =>
-              items.map((exercise) => (
-                <ExerciseItem
-                  key={exercise.id}
-                  exercise={exercise}
-                  readOnly={isCompleted}
-                  sections={sections}
-                />
-              ));
-
             const content = (
               <>
                 {sections.map((section) => {
-                  const sectionExercises = bySectionId(section.id);
+                  const sectionExercises = exercisesBySectionId(section.id);
                   return (
                     <Box key={section.id} sx={{ mb: 2 }}>
                       <Stack direction="row" alignItems="center" spacing={0.5} mb={0.5}>
@@ -357,14 +379,14 @@ export default function SessionDetail({ session, templates }: Props) {
                     </Box>
                   );
                 })}
-                {unsectioned.length > 0 && (
+                {unsectionedExercises.length > 0 && (
                   <Box sx={{ mb: 2 }}>
                     {sections.length > 0 && (
                       <Typography variant="caption" color="text.secondary" mb={0.5} display="block">
                         Uten seksjon
                       </Typography>
                     )}
-                    {renderExercises(unsectioned)}
+                    {renderExercises(unsectionedExercises)}
                   </Box>
                 )}
               </>
@@ -373,7 +395,7 @@ export default function SessionDetail({ session, templates }: Props) {
             if (!isMounted) return content;
             return (
               <DndContext id={dndId} sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext items={allIds} strategy={verticalListSortingStrategy}>
+                <SortableContext items={allSortableIds} strategy={verticalListSortingStrategy}>
                   {content}
                 </SortableContext>
               </DndContext>
