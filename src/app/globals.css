@@ -44,14 +44,51 @@ input[type="number"] {
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(6px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
 .fade-in {
-  animation: fadeIn 0.35s ease-out both;
+  animation: fadeIn 0.15s ease-out both;
+}
+
+/* Navigation progress bar */
+.nav-progress {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  z-index: 1300;
+  overflow: hidden;
+}
+
+.nav-progress::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, #6366F1, #818CF8);
+  border-radius: 1px;
+  animation: navSlide 0.8s ease-in-out infinite;
+}
+
+@keyframes navSlide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
+}
+
+/* Delayed skeleton reveal — hides skeletons for fast navigations */
+@keyframes skeletonReveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.skeleton-delayed {
+  opacity: 0;
+  animation: skeletonReveal 0.2s ease-out 0.15s forwards;
 }

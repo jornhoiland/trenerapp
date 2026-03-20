@@ -15,7 +15,7 @@ import TextField from '@mui/material/TextField';
 import { StarIcon, ContentCopyIcon } from '@/components/icons';
 import { duplicateSession } from '@/lib/actions/sessions';
 import type { SessionWithExercises } from '@/types/database';
-import { useState, useTransition } from 'react';
+import { useState, useTransition, memo } from 'react';
 import DatePickerField from './DatePickerField';
 
 interface Props {
@@ -48,7 +48,7 @@ export default function FavoritesList({ favorites }: Props) {
   );
 }
 
-function FavoriteCard({ session }: { session: SessionWithExercises }) {
+const FavoriteCard = memo(function FavoriteCard({ session }: { session: SessionWithExercises }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [loading, setLoading] = useState(false);
@@ -130,4 +130,4 @@ function FavoriteCard({ session }: { session: SessionWithExercises }) {
       </Dialog>
     </>
   );
-}
+});

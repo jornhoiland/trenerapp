@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
@@ -41,11 +41,14 @@ export default function VideoPicker({ value, onChange }: Props) {
   const [category, setCategory] = useState('all');
   const [externalUrl, setExternalUrl] = useState('');
 
-  const filtered = SKADEFRI_VIDEOS.filter((v) => {
-    const matchCat = category === 'all' || v.category === category;
-    const matchSearch = !search || v.title.toLowerCase().includes(search.toLowerCase());
-    return matchCat && matchSearch;
-  });
+  const filtered = useMemo(
+    () => SKADEFRI_VIDEOS.filter((v) => {
+      const matchCat = category === 'all' || v.category === category;
+      const matchSearch = !search || v.title.toLowerCase().includes(search.toLowerCase());
+      return matchCat && matchSearch;
+    }),
+    [category, search]
+  );
 
   const handleSelectVimeo = (vimeoId: string) => {
     onChange(`vimeo:${vimeoId}`);

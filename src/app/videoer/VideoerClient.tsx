@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect, useTransition } from 'react';
-import Container from '@mui/material/Container';
+import { useState, useTransition, useMemo, useCallback } from 'react';
 import Typography from '@mui/material/Typography';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -21,7 +20,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import Divider from '@mui/material/Divider';
 import { PlayCircleIcon, CloseIcon, OpenInNewIcon, SearchIcon, DeleteIcon } from '@/components/icons';
 import { SKADEFRI_VIDEOS, type SkadefriVideo, parseVideoUrl } from '@/lib/videos';
-import { getSavedVideos, deleteSavedVideo } from '@/lib/actions/videos';
+import { deleteSavedVideo } from '@/lib/actions/videos';
 import type { SavedVideo } from '@/types/database';
 
 const LEVEL_TABS = [
@@ -38,25 +37,28 @@ const CATEGORY_CHIPS: { label: string; value: string }[] = [
   { label: 'Styrke', value: 'styrke' },
 ];
 
-export default function VideoerClient() {
+interface Props {
+  initialSavedVideos: SavedVideo[];
+}
+
+export default function VideoerClient({ initialSavedVideos }: Props) {
   const [activeLevel, setActiveLevel] = useState(1);
   const [activeCategory, setActiveCategory] = useState('all');
   const [openVideo, setOpenVideo] = useState<SkadefriVideo | null>(null);
   const [search, setSearch] = useState('');
   const [isPending, startTransition] = useTransition();
-  const [savedVideos, setSavedVideos] = useState<SavedVideo[]>([]);
+  const [savedVideos, setSavedVideos] = useState<SavedVideo[]>(initialSavedVideos);
   const [showAllSaved, setShowAllSaved] = useState(false);
 
-  useEffect(() => {
-    getSavedVideos().then(setSavedVideos).catch(() => {});
-  }, []);
-
-  const filtered = SKADEFRI_VIDEOS.filter((e) => {
-    const matchLevel = e.level === activeLevel;
-    const matchCategory = activeCategory === 'all' || e.category === activeCategory;
-    const matchSearch = !search || e.title.toLowerCase().includes(search.toLowerCase());
-    return matchLevel && matchCategory && matchSearch;
-  });
+  const filtered = useMemo(
+    () => SKADEFRI_VIDEOS.filter((e) => {
+      const matchLevel = e.level === activeLevel;
+      const matchCategory = activeCategory === 'all' || e.category === activeCategory;
+      const matchSearch = !search || e.title.toLowerCase().includes(search.toLowerCase());
+      return matchLevel && matchCategory && matchSearch;
+    }),
+    [activeLevel, activeCategory, search]
+  );
 
   function handleDeleteSaved(id: string) {
     startTransition(async () => {
@@ -66,14 +68,7 @@ export default function VideoerClient() {
   }
 
   return (
-    <Container maxWidth="sm" sx={{ py: 2 }}>
-      <Typography variant="h5" fontWeight={700} mb={0.5}>
-        Videoer
-      </Typography>
-      <Typography variant="body2" color="text.secondary" mb={1.5}>
-        Skadefri-øvelser og lagrede videoer
-      </Typography>
-
+    <>
       {/* Mine lagrede videoer */}
       {savedVideos.length > 0 && (
         <>
@@ -298,6 +293,6 @@ export default function VideoerClient() {
           </Box>
         </DialogContent>
       </Dialog>
-    </Container>
+    </>
   );
 }

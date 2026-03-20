@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useTransition, useEffect, useId, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
@@ -39,7 +40,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import ExerciseItem from '@/components/ExerciseItem';
-import VideoPicker from '@/components/VideoPicker';
+const VideoPicker = dynamic(() => import('@/components/VideoPicker'));
 import CompletionDialog from '@/components/CompletionDialog';
 import {
   ArrowBackIcon,

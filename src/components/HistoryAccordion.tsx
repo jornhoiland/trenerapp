@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useTransition, useMemo } from 'react';
+import { useState, useTransition, useMemo, memo, useRef, useEffect } from 'react';
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -389,7 +389,7 @@ function TimelineView({ sessions, folders }: { sessions: SessionWithExercises[];
 }
 
 /* ── Session Item ── */
-function SessionItem({ session, folders }: { session: SessionWithExercises; folders: HistoryFolder[] }) {
+const SessionItem = memo(function SessionItem({ session, folders }: { session: SessionWithExercises; folders: HistoryFolder[] }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -558,4 +558,4 @@ function SessionItem({ session, folders }: { session: SessionWithExercises; fold
       </Dialog>
     </>
   );
-}
+});

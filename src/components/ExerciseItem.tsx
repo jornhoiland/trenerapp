@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition, memo } from 'react';
+import dynamic from 'next/dynamic';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
@@ -22,7 +23,7 @@ import { DeleteIcon, EditIcon, PersonOutlineIcon, PlayCircleIcon, CloseIcon } fr
 import SvgIcon from '@mui/material/SvgIcon';
 import { toggleExercise, deleteExercise, updateExercise } from '@/lib/actions/exercises';
 import { parseVideoUrl, findSkadefriVideo } from '@/lib/videos';
-import VideoPicker from '@/components/VideoPicker';
+const VideoPicker = dynamic(() => import('@/components/VideoPicker'));
 import type { Exercise, SessionSection } from '@/types/database';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
