@@ -1,28 +1,24 @@
 'use client';
 
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import BottomNavigation from '@mui/material/BottomNavigation';
 import BottomNavigationAction from '@mui/material/BottomNavigationAction';
 import Paper from '@mui/material/Paper';
 import { FitnessCenterIcon, HistoryIcon, PlayCircleIcon, LibraryIcon } from '@/components/icons';
+import { useNavigationProgress } from '@/components/NavigationProgress';
 
 const ROUTES = ['/', '/ovelser', '/historikk', '/videoer'] as const;
 
 export default function BottomNav() {
   const router = useRouter();
   const pathname = usePathname();
-  const [isNavigating, setIsNavigating] = useState(false);
+  const { startNavigation } = useNavigationProgress();
 
   // Prefetch all tab routes on mount so navigation is instant
   useEffect(() => {
     ROUTES.forEach((route) => router.prefetch(route));
   }, [router]);
-
-  // Clear navigation state when route completes
-  useEffect(() => {
-    setIsNavigating(false);
-  }, [pathname]);
 
   const value = pathname.startsWith('/ovelser')
     ? 1
@@ -34,26 +30,23 @@ export default function BottomNav() {
 
   const handleChange = useCallback((_: unknown, newValue: number) => {
     if (ROUTES[newValue] !== pathname) {
-      setIsNavigating(true);
+      startNavigation();
     }
     router.push(ROUTES[newValue]);
-  }, [router, pathname]);
+  }, [router, pathname, startNavigation]);
 
   return (
-    <>
-      {isNavigating && <div className="nav-progress" />}
-      <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1200 }} elevation={0}>
-        <BottomNavigation
-          value={value}
-          onChange={handleChange}
-          showLabels
-        >
-          <BottomNavigationAction label="Økter" icon={<FitnessCenterIcon />} />
-          <BottomNavigationAction label="Øvelser" icon={<LibraryIcon />} />
-          <BottomNavigationAction label="Historikk" icon={<HistoryIcon />} />
-          <BottomNavigationAction label="Videoer" icon={<PlayCircleIcon />} />
-        </BottomNavigation>
-      </Paper>
-    </>
+    <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1200 }} elevation={0}>
+      <BottomNavigation
+        value={value}
+        onChange={handleChange}
+        showLabels
+      >
+        <BottomNavigationAction label="Økter" icon={<FitnessCenterIcon />} />
+        <BottomNavigationAction label="Øvelser" icon={<LibraryIcon />} />
+        <BottomNavigationAction label="Historikk" icon={<HistoryIcon />} />
+        <BottomNavigationAction label="Videoer" icon={<PlayCircleIcon />} />
+      </BottomNavigation>
+    </Paper>
   );
 }

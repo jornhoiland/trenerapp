@@ -21,6 +21,7 @@ export async function createExerciseTemplate(template: {
   individual_note?: string | null;
   video_url?: string | null;
   duration_minutes?: number | null;
+  category?: string | null;
 }) {
   if (!isSupabaseConfigured()) throw new Error('Supabase er ikke konfigurert.');
   const supabase = await createClient();
@@ -30,6 +31,7 @@ export async function createExerciseTemplate(template: {
       is_individual: template.is_individual || false,
       individual_note: template.individual_note || null,
       video_url: template.video_url || null,
+      category: template.category || null,
     };
     if (template.duration_minutes != null) {
       insertData.duration_minutes = template.duration_minutes;
@@ -46,7 +48,7 @@ export async function createExerciseTemplate(template: {
 
 export async function updateExerciseTemplate(
   id: string,
-  updates: { name?: string; description?: string | null; is_individual?: boolean; individual_note?: string | null; video_url?: string | null; duration_minutes?: number | null }
+  updates: { name?: string; description?: string | null; is_individual?: boolean; individual_note?: string | null; video_url?: string | null; duration_minutes?: number | null; category?: string | null }
 ) {
   if (!isSupabaseConfigured()) return;
   const supabase = await createClient();

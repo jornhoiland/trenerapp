@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useTransition, useMemo, memo, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -37,6 +38,7 @@ import {
   SearchIcon,
 } from '@/components/icons';
 import { duplicateSession, deleteSession } from '@/lib/actions/sessions';
+import { useNavigationProgress } from '@/components/NavigationProgress';
 import { createFolder, deleteFolder, renameFolder, moveSessionToFolder } from '@/lib/actions/folders';
 import type { SessionWithExercises, HistoryFolder } from '@/types/database';
 import SvgIcon from '@mui/material/SvgIcon';
@@ -391,6 +393,7 @@ function TimelineView({ sessions, folders }: { sessions: SessionWithExercises[];
 /* ── Session Item ── */
 const SessionItem = memo(function SessionItem({ session, folders }: { session: SessionWithExercises; folders: HistoryFolder[] }) {
   const router = useRouter();
+  const { startNavigation } = useNavigationProgress();
   const [isPending, startTransition] = useTransition();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -408,6 +411,7 @@ const SessionItem = memo(function SessionItem({ session, folders }: { session: S
     setDialogOpen(false);
     startTransition(async () => {
       const newSession = await duplicateSession(session.id, title.trim() || session.title, reuseDate);
+      startNavigation();
       router.push(`/sessions/${newSession.id}`);
     });
   };
@@ -472,7 +476,7 @@ const SessionItem = memo(function SessionItem({ session, folders }: { session: S
           </Stack>
         }
       >
-        <ListItemButton onClick={() => router.push(`/sessions/${session.id}`)} sx={{ pl: 2, borderRadius: 1.5 }}>
+        <ListItemButton component={Link} href={`/sessions/${session.id}`} onClick={() => startNavigation()} sx={{ pl: 2, borderRadius: 1.5 }}>
           <ListItemText
             primary={
               <span>

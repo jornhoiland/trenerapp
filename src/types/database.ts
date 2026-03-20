@@ -51,6 +51,7 @@ export type ExerciseTemplate = {
   individual_note: string | null;
   video_url: string | null;
   duration_minutes: number | null;
+  category: string | null;
   created_at: string;
 };
 

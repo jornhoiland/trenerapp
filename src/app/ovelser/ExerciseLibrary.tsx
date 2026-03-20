@@ -21,6 +21,8 @@ import Chip from '@mui/material/Chip';
 import Tooltip from '@mui/material/Tooltip';
 import Collapse from '@mui/material/Collapse';
 import Divider from '@mui/material/Divider';
+import InputAdornment from '@mui/material/InputAdornment';
+import MenuItem from '@mui/material/MenuItem';
 import { AddIcon, DeleteIcon, EditIcon, PersonOutlineIcon, SearchIcon, PlayCircleIcon } from '@/components/icons';
 import SvgIcon from '@mui/material/SvgIcon';
 
@@ -45,6 +47,7 @@ export default function ExerciseLibrary({ templates }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editTemplate, setEditTemplate] = useState<ExerciseTemplate | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -54,12 +57,24 @@ export default function ExerciseLibrary({ templates }: Props) {
   const [individualNote, setIndividualNote] = useState('');
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [duration, setDuration] = useState('');
+  const [category, setCategory] = useState('');
 
-  const filtered = templates.filter(
-    (t) =>
-      t.name.toLowerCase().includes(search.toLowerCase()) ||
-      (t.description && t.description.toLowerCase().includes(search.toLowerCase()))
-  );
+  const CATEGORIES = ['Oppvarming', 'Styrke', 'Teknikk', 'Utholdenhet', 'Skadefri', 'Annet'];
+
+  const categories = useMemo(() => {
+    const cats = new Set<string>();
+    templates.forEach((t) => { if (t.category) cats.add(t.category); });
+    return CATEGORIES.filter((c) => cats.has(c));
+  }, [templates]);
+
+  const filtered = useMemo(() => templates.filter(
+    (t) => {
+      const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase()) ||
+        (t.description && t.description.toLowerCase().includes(search.toLowerCase()));
+      const matchesCategory = !selectedCategory || t.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    }
+  ), [templates, search, selectedCategory]);
 
   const openCreate = () => {
     setEditTemplate(null);
@@ -69,6 +84,7 @@ export default function ExerciseLibrary({ templates }: Props) {
     setIndividualNote('');
     setVideoUrl(null);
     setDuration('');
+    setCategory('');
     setDialogOpen(true);
   };
 
@@ -80,6 +96,7 @@ export default function ExerciseLibrary({ templates }: Props) {
     setIndividualNote(t.individual_note || '');
     setVideoUrl(t.video_url);
     setDuration(t.duration_minutes?.toString() || '');
+    setCategory(t.category || '');
     setDialogOpen(true);
   };
 
@@ -96,6 +113,7 @@ export default function ExerciseLibrary({ templates }: Props) {
           individual_note: isIndividual ? individualNote.trim() || null : null,
           video_url: videoUrl,
           duration_minutes: validDuration,
+          category: category || null,
         });
       } else {
         await createExerciseTemplate({
@@ -105,6 +123,7 @@ export default function ExerciseLibrary({ templates }: Props) {
           individual_note: isIndividual ? individualNote.trim() || null : null,
           video_url: videoUrl,
           duration_minutes: validDuration,
+          category: category || null,
         });
       }
       setDialogOpen(false);
@@ -135,6 +154,28 @@ export default function ExerciseLibrary({ templates }: Props) {
         sx={{ mb: 2 }}
       />
 
+      {categories.length > 0 && (
+        <Stack direction="row" spacing={0.75} sx={{ mb: 2, flexWrap: 'wrap', gap: 0.75 }}>
+          <Chip
+            label="Alle"
+            size="small"
+            variant={selectedCategory === null ? 'filled' : 'outlined'}
+            color={selectedCategory === null ? 'primary' : 'default'}
+            onClick={() => setSelectedCategory(null)}
+          />
+          {categories.map((cat) => (
+            <Chip
+              key={cat}
+              label={cat}
+              size="small"
+              variant={selectedCategory === cat ? 'filled' : 'outlined'}
+              color={selectedCategory === cat ? 'primary' : 'default'}
+              onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
+            />
+          ))}
+        </Stack>
+      )}
+
       {filtered.length > 0 ? (
         <Stack spacing={1}>
           {filtered.map((t) => {
@@ -152,6 +193,9 @@ export default function ExerciseLibrary({ templates }: Props) {
                         <Typography variant="subtitle2" fontWeight={600} noWrap>
                           {t.name}
                         </Typography>
+                        {t.category && (
+                          <Chip label={t.category} size="small" variant="outlined" sx={{ height: 20, fontSize: '0.65rem' }} />
+                        )}
                         {t.is_individual && (
                           <Tooltip title={t.individual_note || 'Individuell øvelse'}>
                             <span>
@@ -266,6 +310,20 @@ export default function ExerciseLibrary({ templates }: Props) {
             onKeyDown={(e) => e.key === 'Enter' && handleSave()}
             sx={{ mb: 2 }}
           />
+          <TextField
+            select
+            margin="dense"
+            label="Kategori"
+            fullWidth
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            sx={{ mb: 2 }}
+          >
+            <MenuItem value="">Ingen kategori</MenuItem>
+            {CATEGORIES.map((cat) => (
+              <MenuItem key={cat} value={cat}>{cat}</MenuItem>
+            ))}
+          </TextField>
           <TextField
             margin="dense"
             label="Beskrivelse (valgfritt)"

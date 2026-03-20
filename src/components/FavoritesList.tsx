@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
@@ -13,6 +14,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import TextField from '@mui/material/TextField';
 import { StarIcon, ContentCopyIcon } from '@/components/icons';
+import { useNavigationProgress } from '@/components/NavigationProgress';
 import { duplicateSession } from '@/lib/actions/sessions';
 import type { SessionWithExercises } from '@/types/database';
 import { useState, useTransition, memo } from 'react';
@@ -50,6 +52,7 @@ export default function FavoritesList({ favorites }: Props) {
 
 const FavoriteCard = memo(function FavoriteCard({ session }: { session: SessionWithExercises }) {
   const router = useRouter();
+  const { startNavigation } = useNavigationProgress();
   const [isPending, startTransition] = useTransition();
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -67,6 +70,7 @@ const FavoriteCard = memo(function FavoriteCard({ session }: { session: SessionW
     startTransition(async () => {
       try {
         const newSession = await duplicateSession(session.id, title.trim() || session.title, reuseDate);
+        startNavigation();
         router.push(`/sessions/${newSession.id}`);
       } catch {
         setLoading(false);
@@ -84,8 +88,10 @@ const FavoriteCard = memo(function FavoriteCard({ session }: { session: SessionW
             variant="subtitle2"
             fontWeight={600}
             noWrap
-            onClick={() => router.push(`/sessions/${session.id}`)}
-            sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+            component={Link}
+            href={`/sessions/${session.id}`}
+            onClick={startNavigation}
+            sx={{ cursor: 'pointer', color: 'inherit', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
           >
             {session.title}
           </Typography>

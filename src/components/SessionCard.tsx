@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition, memo, useMemo } from 'react';
+import Link from 'next/link';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardActionArea from '@mui/material/CardActionArea';
@@ -18,12 +19,15 @@ import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import { useRouter } from 'next/navigation';
 import { StarIcon, CalendarTodayIcon, DeleteIcon } from '@/components/icons';
+import { useNavigationProgress } from '@/components/NavigationProgress';
 import { deleteSession } from '@/lib/actions/sessions';
 import type { SessionWithExercises } from '@/types/database';
 
 export default memo(function SessionCard({ session }: { session: SessionWithExercises }) {
   const router = useRouter();
+  const { startNavigation } = useNavigationProgress();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const sessionHref = `/sessions/${session.id}`;
   const [isPending, startTransition] = useTransition();
   const exercises = session.exercises || [];
   const doneCount = exercises.filter((e) => e.is_done).length;
@@ -50,7 +54,7 @@ export default memo(function SessionCard({ session }: { session: SessionWithExer
   return (
     <>
       <Card sx={{ mb: 2 }}>
-        <CardActionArea onClick={() => router.push(`/sessions/${session.id}`)}>
+        <CardActionArea component={Link} href={sessionHref} onClick={startNavigation}>
           <CardContent>
           <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
             <Typography variant="h6" component="div" sx={{ fontSize: '1.1rem', flex: 1, minWidth: 0 }}>

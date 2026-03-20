@@ -161,13 +161,16 @@ export default memo(function ExerciseItem({ exercise, readOnly = false, sections
             <DragHandleIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
           </ListItemIcon>
         )}
-        <ListItemIcon sx={{ minWidth: 42 }}>
+        <ListItemIcon sx={{ minWidth: 48 }}>
           <Checkbox
             edge="start"
             checked={exercise.is_done}
             onChange={handleToggle}
             disabled={readOnly}
-            sx={{ p: 0.5 }}
+            sx={{
+              p: 1,
+              '& .MuiSvgIcon-root': { fontSize: 28 },
+            }}
           />
         </ListItemIcon>
         <ListItemText

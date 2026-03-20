@@ -4,6 +4,7 @@ import './globals.css';
 import ThemeRegistry from '@/lib/ThemeRegistry';
 import BottomNav from '@/components/BottomNav';
 import TopBar from '@/components/TopBar';
+import NavigationProgress from '@/components/NavigationProgress';
 
 export const metadata: Metadata = {
   title: 'Tren',
@@ -32,19 +33,21 @@ export default function RootLayout({
     <html lang="no">
       <body>
         <ThemeRegistry>
-          <TopBar fontClass={inter.className} />
-          <main
-            className={inter.className}
-            style={{
-              paddingTop: '64px',
-              paddingBottom: '72px',
-              minHeight: '100vh',
-              background: '#0B0D17',
-            }}
-          >
-            {children}
-          </main>
-          <BottomNav />
+          <NavigationProgress>
+            <TopBar fontClass={inter.className} />
+            <main
+              className={inter.className}
+              style={{
+                paddingTop: '64px',
+                paddingBottom: '72px',
+                minHeight: '100vh',
+                background: '#0B0D17',
+              }}
+            >
+              {children}
+            </main>
+            <BottomNav />
+          </NavigationProgress>
         </ThemeRegistry>
       </body>
     </html>

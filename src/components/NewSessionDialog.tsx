@@ -10,6 +10,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import DatePickerField from './DatePickerField';
 import { useRouter } from 'next/navigation';
+import { useNavigationProgress } from '@/components/NavigationProgress';
 import { createSession } from '@/lib/actions/sessions';
 
 interface Props {
@@ -19,6 +20,7 @@ interface Props {
 
 export default function NewSessionDialog({ open, onClose }: Props) {
   const router = useRouter();
+  const { startNavigation } = useNavigationProgress();
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(false);
@@ -33,6 +35,7 @@ export default function NewSessionDialog({ open, onClose }: Props) {
       setTitle('');
       setDate(new Date().toISOString().split('T')[0]);
       onClose();
+      startNavigation();
       router.push(`/sessions/${session.id}`);
     } catch (err) {
       console.error('Feil ved opprettelse:', err);
