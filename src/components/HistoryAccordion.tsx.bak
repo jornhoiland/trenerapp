@@ -1,0 +1,214 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { useState, useTransition } from 'react';
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import Typography from '@mui/material/Typography';
+import Chip from '@mui/material/Chip';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemText from '@mui/material/ListItemText';
+import IconButton from '@mui/material/IconButton';
+import Stack from '@mui/material/Stack';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Tooltip from '@mui/material/Tooltip';
+import { ContentCopyIcon, StarIcon } from '@/components/icons';
+import { duplicateSession } from '@/lib/actions/sessions';
+import type { SessionWithExercises } from '@/types/database';
+import SvgIcon from '@mui/material/SvgIcon';
+
+function ExpandMoreIcon(props: React.ComponentProps<typeof SvgIcon>) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z" />
+    </SvgIcon>
+  );
+}
+
+// Group sessions by year > week > day
+function groupSessions(sessions: SessionWithExercises[]) {
+  const grouped: Record<number, Record<number, Record<string, SessionWithExercises[]>>> = {};
+
+  sessions.forEach((session) => {
+    const date = new Date(session.date);
+    const year = date.getFullYear();
+
+    // ISO week number
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+
+    const dayKey = session.date;
+
+    if (!grouped[year]) grouped[year] = {};
+    if (!grouped[year][weekNo]) grouped[year][weekNo] = {};
+    if (!grouped[year][weekNo][dayKey]) grouped[year][weekNo][dayKey] = [];
+    grouped[year][weekNo][dayKey].push(session);
+  });
+
+  return grouped;
+}
+
+function formatDay(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString('nb-NO', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+}
+
+export default function HistoryAccordion({ sessions }: { sessions: SessionWithExercises[] }) {
+  const grouped = groupSessions(sessions);
+  const years = Object.keys(grouped)
+    .map(Number)
+    .sort((a, b) => b - a);
+
+  return (
+    <>
+      {years.map((year) => {
+        const weeks = Object.keys(grouped[year])
+          .map(Number)
+          .sort((a, b) => b - a);
+        const yearTotal = weeks.reduce(
+          (sum, w) =>
+            sum + Object.values(grouped[year][w]).reduce((s, d) => s + d.length, 0),
+          0
+        );
+
+        return (
+          <Accordion key={year} defaultExpanded={years[0] === year}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Stack direction="row" alignItems="center" spacing={1} width="100%">
+                <Typography variant="h6" fontWeight={600}>
+                  {year}
+                </Typography>
+                <Chip label={`${yearTotal} økter`} size="small" variant="outlined" />
+              </Stack>
+            </AccordionSummary>
+            <AccordionDetails sx={{ p: 0 }}>
+              {weeks.map((week) => {
+                const days = Object.keys(grouped[year][week]).sort().reverse();
+                const weekTotal = days.reduce((s, d) => s + grouped[year][week][d].length, 0);
+
+                return (
+                  <Accordion key={week} sx={{ boxShadow: 'none', '&:before': { display: 'none' } }}>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pl: 3 }}>
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <Typography variant="subtitle1" fontWeight={500}>
+                          Uke {week}
+                        </Typography>
+                        <Chip
+                          label={`${weekTotal} økt${weekTotal !== 1 ? 'er' : ''}`}
+                          size="small"
+                          color="primary"
+                          variant="outlined"
+                        />
+                      </Stack>
+                    </AccordionSummary>
+                    <AccordionDetails sx={{ p: 0 }}>
+                      {days.map((day) => (
+                        <div key={day}>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ pl: 4, pt: 1, display: 'block', textTransform: 'capitalize' }}
+                          >
+                            {formatDay(day)}
+                          </Typography>
+                          <List disablePadding>
+                            {grouped[year][week][day].map((session) => (
+                              <HistorySessionItem key={session.id} session={session} />
+                            ))}
+                          </List>
+                        </div>
+                      ))}
+                    </AccordionDetails>
+                  </Accordion>
+                );
+              })}
+            </AccordionDetails>
+          </Accordion>
+        );
+      })}
+    </>
+  );
+}
+
+function HistorySessionItem({ session }: { session: SessionWithExercises }) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [title, setTitle] = useState(session.title);
+
+  const handleDuplicateClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setTitle(session.title);
+    setDialogOpen(true);
+  };
+
+  const handleConfirm = () => {
+    setDialogOpen(false);
+    startTransition(async () => {
+      const newSession = await duplicateSession(session.id, title.trim() || session.title);
+      router.push(`/sessions/${newSession.id}`);
+    });
+  };
+
+  const exerciseCount = session.exercises?.length || 0;
+
+  return (
+    <>
+      <ListItem
+        disablePadding
+        secondaryAction={
+          <Tooltip title="Gjenbruk denne økten">
+            <IconButton edge="end" onClick={handleDuplicateClick} disabled={isPending} size="small">
+              <ContentCopyIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        }
+      >
+        <ListItemButton onClick={() => router.push(`/sessions/${session.id}`)} sx={{ pl: 4 }}>
+          <ListItemText
+            primary={
+              <Stack direction="row" alignItems="center" spacing={0.5}>
+                {session.is_favorite && <StarIcon sx={{ fontSize: 16, color: '#FFB800' }} />}
+                <span>{session.title}</span>
+              </Stack>
+            }
+            secondary={`${exerciseCount} øvelse${exerciseCount !== 1 ? 'r' : ''}`}
+          />
+        </ListItemButton>
+      </ListItem>
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Gjenbruk økt</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Tittel"
+            fullWidth
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            autoFocus
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDialogOpen(false)}>Avbryt</Button>
+          <Button variant="contained" onClick={handleConfirm}>
+            Opprett
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
+  );
+}

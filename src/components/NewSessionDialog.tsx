@@ -1,0 +1,75 @@
+'use client';
+
+import { useState } from 'react';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import DatePickerField from './DatePickerField';
+import { useRouter } from 'next/navigation';
+import { createSession } from '@/lib/actions/sessions';
+
+interface Props {
+  open: boolean;
+  onClose: () => void;
+}
+
+export default function NewSessionDialog({ open, onClose }: Props) {
+  const router = useRouter();
+  const [title, setTitle] = useState('');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!title.trim()) return;
+    setLoading(true);
+    try {
+      const session = await createSession(title.trim(), date);
+      setTitle('');
+      setDate(new Date().toISOString().split('T')[0]);
+      onClose();
+      router.push(`/sessions/${session.id}`);
+    } catch (err) {
+      console.error('Feil ved opprettelse:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle sx={{ fontWeight: 600 }}>Ny treningsøkt</DialogTitle>
+      <DialogContent>
+        <TextField
+          autoFocus
+          margin="dense"
+          label="Tittel"
+          placeholder="F.eks. Styrke uke 12"
+          fullWidth
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+          sx={{ mb: 2 }}
+        />
+        <DatePickerField
+          value={date}
+          onChange={setDate}
+        />
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button onClick={onClose} color="inherit">
+          Avbryt
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          variant="contained"
+          disabled={!title.trim() || loading}
+        >
+          {loading ? 'Oppretter...' : 'Opprett'}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
