@@ -64,7 +64,7 @@ export default function ExerciseLibrary({ templates }: Props) {
   const categories = useMemo(() => {
     const cats = new Set<string>();
     templates.forEach((t) => { if (t.category) cats.add(t.category); });
-    return CATEGORIES.filter((c) => cats.has(c));
+    return Array.from(cats).sort();
   }, [templates]);
 
   const filtered = useMemo(() => templates.filter(
@@ -154,27 +154,32 @@ export default function ExerciseLibrary({ templates }: Props) {
         sx={{ mb: 2 }}
       />
 
-      {categories.length > 0 && (
-        <Stack direction="row" spacing={0.75} sx={{ mb: 2, flexWrap: 'wrap', gap: 0.75 }}>
-          <Chip
-            label="Alle"
-            size="small"
-            variant={selectedCategory === null ? 'filled' : 'outlined'}
-            color={selectedCategory === null ? 'primary' : 'default'}
-            onClick={() => setSelectedCategory(null)}
-          />
-          {categories.map((cat) => (
+      <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+        Kategori
+      </Typography>
+      <Stack direction="row" spacing={0.75} sx={{ mb: 2, flexWrap: 'wrap', gap: 0.75 }}>
+        <Chip
+          label="Alle"
+          size="small"
+          variant={selectedCategory === null ? 'filled' : 'outlined'}
+          color={selectedCategory === null ? 'primary' : 'default'}
+          onClick={() => setSelectedCategory(null)}
+        />
+        {CATEGORIES.map((cat) => {
+          const hasCategory = categories.includes(cat);
+          return (
             <Chip
               key={cat}
               label={cat}
               size="small"
               variant={selectedCategory === cat ? 'filled' : 'outlined'}
-              color={selectedCategory === cat ? 'primary' : 'default'}
+              color={selectedCategory === cat ? 'primary' : hasCategory ? 'default' : undefined}
               onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
+              sx={{ opacity: hasCategory ? 1 : 0.5 }}
             />
-          ))}
-        </Stack>
-      )}
+          );
+        })}
+      </Stack>
 
       {filtered.length > 0 ? (
         <Stack spacing={1}>
