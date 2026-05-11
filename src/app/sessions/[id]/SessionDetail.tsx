@@ -23,6 +23,7 @@ import Switch from '@mui/material/Switch';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import InputAdornment from '@mui/material/InputAdornment';
+import MenuItem from '@mui/material/MenuItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -76,11 +77,13 @@ export default function SessionDetail({ session, templates }: Props) {
   const [showAddExercise, setShowAddExercise] = useState(false);
   const [showManualForm, setShowManualForm] = useState(false);
   const [templateSearch, setTemplateSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [newExName, setNewExName] = useState('');
   const [newExIndividual, setNewExIndividual] = useState(false);
   const [newExNote, setNewExNote] = useState('');
   const [newExVideoUrl, setNewExVideoUrl] = useState<string | null>(null);
   const [newExDuration, setNewExDuration] = useState('');
+  const [newExCategory, setNewExCategory] = useState('');
   const [newExSaveToLibrary, setNewExSaveToLibrary] = useState(false);
   const [isPending, startTransition] = useTransition();
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -219,6 +222,7 @@ export default function SessionDetail({ session, templates }: Props) {
           individual_note: newExIndividual ? newExNote.trim() || null : null,
           video_url: newExVideoUrl,
           duration_minutes: validDuration ?? null,
+          category: newExCategory || null,
         });
       }
       setNewExName('');
@@ -253,18 +257,38 @@ export default function SessionDetail({ session, templates }: Props) {
     setShowAddExercise(false);
     setShowManualForm(false);
     setTemplateSearch('');
+    setSelectedCategory(null);
     setNewExName('');
     setNewExIndividual(false);
     setNewExNote('');
     setNewExVideoUrl(null);
     setNewExDuration('');
+    setNewExCategory('');
     setNewExSaveToLibrary(false);
     setAddToSectionId(null);
   };
 
+  const CATEGORY_ORDER = ['Oppvarming', 'Styrke', 'Teknikk', 'Utholdenhet', 'Skadefri', 'Annet'] as const;
+
+  const categoryOptions = useMemo(() => {
+    const used = new Set(templates.map((t) => t.category || '').filter(Boolean) as string[]);
+    if (used.size === 0) return [...CATEGORY_ORDER];
+    const extra = [...used].filter(
+      (category) => !CATEGORY_ORDER.includes(category as typeof CATEGORY_ORDER[number])
+    );
+    return [
+      ...CATEGORY_ORDER.filter((category) => used.has(category)),
+      ...extra,
+    ];
+  }, [templates]);
+
   const filteredTemplates = useMemo(
-    () => templates.filter((t) => t.name.toLowerCase().includes(templateSearch.toLowerCase())),
-    [templates, templateSearch]
+    () => templates.filter((t) => {
+      const matchesSearch = t.name.toLowerCase().includes(templateSearch.toLowerCase());
+      const matchesCategory = !selectedCategory || t.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    }),
+    [templates, templateSearch, selectedCategory]
   );
 
   const handleCompletionClose = () => {
@@ -532,6 +556,27 @@ export default function SessionDetail({ session, templates }: Props) {
                 }}
                 sx={{ mb: 1 }}
               />
+              {categoryOptions.length > 0 && (
+                <Stack direction="row" spacing={0.75} sx={{ flexWrap: 'wrap', mb: 1 }}>
+                  <Chip
+                    label="Alle"
+                    size="small"
+                    variant={selectedCategory === null ? 'filled' : 'outlined'}
+                    color={selectedCategory === null ? 'primary' : 'default'}
+                    onClick={() => setSelectedCategory(null)}
+                  />
+                  {categoryOptions.map((category) => (
+                    <Chip
+                      key={category}
+                      label={category}
+                      size="small"
+                      variant={selectedCategory === category ? 'filled' : 'outlined'}
+                      color={selectedCategory === category ? 'primary' : 'default'}
+                      onClick={() => setSelectedCategory(selectedCategory === category ? null : category)}
+                    />
+                  ))}
+                </Stack>
+              )}
               <List disablePadding sx={{ maxHeight: 140, overflow: 'auto', mb: 1 }}>
                 {filteredTemplates.map((t) => (
                   <ListItemButton
@@ -548,6 +593,9 @@ export default function SessionDetail({ session, templates }: Props) {
                       primary={
                         <Stack direction="row" alignItems="center" spacing={0.5}>
                           <span>{t.name}</span>
+                          {t.category && (
+                            <Chip label={t.category} size="small" variant="outlined" sx={{ height: 20, fontSize: '0.65rem' }} />
+                          )}
                           {t.is_individual && (
                             <PersonOutlineIcon sx={{ fontSize: 16, color: 'primary.main' }} />
                           )}
@@ -593,6 +641,22 @@ export default function SessionDetail({ session, templates }: Props) {
                 onKeyDown={(e) => e.key === 'Enter' && handleAddExercise()}
                 sx={{ mb: 1.5 }}
               />
+              <TextField
+                select
+                size="small"
+                label="Kategori"
+                fullWidth
+                value={newExCategory}
+                onChange={(e) => setNewExCategory(e.target.value)}
+                sx={{ mb: 1.5 }}
+              >
+                {CATEGORY_ORDER.map((category) => (
+                  <MenuItem key={category} value={category}>
+                    {category}
+                  </MenuItem>
+                ))}
+                <MenuItem value="">Ingen kategori</MenuItem>
+              </TextField>
               <TextField
                 size="small"
                 label="Beskrivelse (valgfritt)"
