@@ -1,3 +1,5 @@
+'use client';
+
 import TextField from '@mui/material/TextField';
 import { useState } from 'react';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
