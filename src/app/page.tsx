@@ -8,15 +8,15 @@ import FadeIn from '@/components/FadeIn';
 
 export default async function Home() {
   const [sessions, favorites, insights] = await Promise.all([
-    getSessions('planned'),
-    getFavoriteSessions(),
-    getTrainingInsights(),
+    getSessions('planned').catch(() => null),
+    getFavoriteSessions().catch(() => null),
+    getTrainingInsights().catch(() => null),
   ]);
 
   return (
     <Container maxWidth="sm" sx={{ py: 2 }}>
       <FadeIn>
-        <InsightsSection insights={insights} />
+        <InsightsSection insights={insights ?? { sessionsThisWeek: 0, sessionsThisMonth: 0, totalCompleted: 0, totalExercisesThisMonth: 0, topExercises: [], individualAdaptations: [] }} />
         <SessionList sessions={sessions ?? []} favorites={favorites ?? []} />
         {(!sessions || sessions.length === 0) && (
           <Box textAlign="center" mt={6}>

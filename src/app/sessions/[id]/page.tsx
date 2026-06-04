@@ -8,7 +8,7 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
   const { id } = await params;
 
   const [session, templates] = await Promise.all([
-    getSession(id),
+    getSession(id).catch(() => null),
     getExerciseTemplates().catch(() => []),
   ]);
 

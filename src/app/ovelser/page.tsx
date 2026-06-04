@@ -5,7 +5,7 @@ import ExerciseLibrary from './ExerciseLibrary';
 import FadeIn from '@/components/FadeIn';
 
 export default async function OvelserPage() {
-  const templates = await getExerciseTemplates();
+  const templates = await getExerciseTemplates().catch(() => null);
 
   return (
     <Container maxWidth="sm" sx={{ py: 2 }}>

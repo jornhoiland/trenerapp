@@ -8,8 +8,8 @@ import FadeIn from '@/components/FadeIn';
 
 export default async function HistorikkPage() {
   const [sessions, folders] = await Promise.all([
-    getSessions('completed'),
-    getFolders(),
+    getSessions('completed').catch(() => null),
+    getFolders().catch(() => null),
   ]);
 
   return (

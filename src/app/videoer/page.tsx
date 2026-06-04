@@ -5,7 +5,7 @@ import VideoerClient from './VideoerClient';
 import FadeIn from '@/components/FadeIn';
 
 export default async function VideoerPage() {
-  const savedVideos = await getSavedVideos();
+  const savedVideos = await getSavedVideos().catch(() => null);
 
   return (
     <Container maxWidth="sm" sx={{ py: 2 }}>
@@ -16,7 +16,7 @@ export default async function VideoerPage() {
         Skadefri-øvelser og lagrede videoer
       </Typography>
       <FadeIn>
-        <VideoerClient initialSavedVideos={savedVideos} />
+        <VideoerClient initialSavedVideos={savedVideos ?? []} />
       </FadeIn>
     </Container>
   );
